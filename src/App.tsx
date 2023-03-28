@@ -1,22 +1,34 @@
+import * as React from 'react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ColorModeContext } from './contexts/ColorModeContext';
+import { ColorModeToggle } from './components/ColorModeToggle';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+export const App = (): JSX.Element => {
+  const [mode, setMode] = React.useState<'light' | 'dark'>('light');
+  const colorMode = React.useMemo(
+    () => ({
+      toggleColorMode: () => {
+        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+      },
+    }),
+    [],
   );
-}
 
-export default App;
+  const theme = React.useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+        },
+      }),
+    [mode],
+  );
+
+  return (
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+        <ColorModeToggle />
+      </ThemeProvider>
+    </ColorModeContext.Provider>
+  );
+};
