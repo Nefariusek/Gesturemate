@@ -1,6 +1,3 @@
-import '@tensorflow/tfjs-backend-cpu';
-import '@tensorflow/tfjs-backend-webgl';
-
 import * as React from 'react';
 import Webcam from 'react-webcam';
 import { Button } from '@mui/material';
