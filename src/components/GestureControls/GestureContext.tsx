@@ -7,6 +7,8 @@ type GestureContextProviderProps = { children: React.ReactNode };
 interface IGestureContext {
   availableGestures: any[];
   currentGestureName: any;
+  detectedPose: any;
+  setDetectedPose?: React.Dispatch<any>;
   setCurrentGestureName?: React.Dispatch<any>;
   setAvailableGestures?: React.Dispatch<any[]>;
 }
@@ -14,6 +16,7 @@ interface IGestureContext {
 const GestureContext = React.createContext<IGestureContext>({
   availableGestures: [],
   currentGestureName: null,
+  detectedPose: null,
 });
 
 export const useGestures = () => {
@@ -27,22 +30,34 @@ export const useGestures = () => {
 };
 
 export const GestureContextProvider = ({ children }: GestureContextProviderProps) => {
-  const [availableGestures, setAvailableGestures] = React.useState<any>([
+  const [availableGestures, setAvailableGestures] = React.useState<any[]>([
     fp.Gestures.VictoryGesture,
     fp.Gestures.ThumbsUpGesture,
   ]);
   const [currentGestureName, setCurrentGestureName] = React.useState<any>(null);
+  const [detectedPose, setDetectedPose] = React.useState<any>(null);
 
-  console.log(currentGestureName);
+  React.useEffect(() => {
+    if (currentGestureName === 'victory') {
+      sendCalculatorRequest();
+    }
+  }, [currentGestureName]);
+
   const gesturesWithMemo = React.useMemo(
     () => ({
+      detectedPose,
+      setDetectedPose,
       currentGestureName,
       setCurrentGestureName,
       availableGestures,
       setAvailableGestures,
     }),
-    [availableGestures, setAvailableGestures, currentGestureName, setCurrentGestureName],
+    [detectedPose, setDetectedPose, availableGestures, setAvailableGestures, currentGestureName, setCurrentGestureName],
   );
+
+  React.useEffect(() => {
+    console.log('New gesture has been added!');
+  }, [availableGestures]);
 
   return <GestureContext.Provider value={gesturesWithMemo}>{children}</GestureContext.Provider>;
 };
@@ -53,4 +68,22 @@ export function getGestureEstimator(gesturesToEstimate: any) {
 
 export function getGestureDescription(name: string) {
   return new fp.GestureDescription(name);
+}
+
+async function sendCalculatorRequest() {
+  const response = await fetch('http://127.0.0.1:8002/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'raw',
+    },
+    mode: 'no-cors',
+    body: 'calc',
+  });
+  if (response.ok) {
+    const responseData = await response.json();
+    console.log(responseData);
+  } else {
+    console.log(response);
+    console.error(`Failed to add gesture: ${response.status}`);
+  }
 }

@@ -6,8 +6,9 @@ import { ColorModeToggle } from './components/ColorModeToggle';
 import Box from '@mui/material/Box';
 import { WebcamHandler } from './components/WebcamHandler/WebcamHandler';
 import { GestureContextProvider } from './components/GestureControls/GestureContext';
-// import { GesturesInspector } from './components/GestureControls/GesturesInspector';
-import { GestureAdder } from './components/GestureControls/GestureAdder';
+import { GesturesInspector } from './components/GestureControls/GesturesInspector';
+// import { GestureAdder } from './components/GestureControls/GestureAdder';
+import { AddGestureDialog } from './components/GestureControls/AddGestureDialog';
 
 export const App = (): JSX.Element => {
   const [mode, setMode] = React.useState<'light' | 'dark'>('light');
@@ -48,11 +49,12 @@ export const App = (): JSX.Element => {
           >
             <div style={{ display: 'flex' }}>
               <ColorModeToggle />
-              {/* <GesturesInspector /> */}
+              <GesturesInspector />
             </div>
             <WebcamHandler />
             <div>
-              <GestureAdder />
+              {/* <GestureAdder /> */}
+              <AddGestureDialog />
             </div>
           </Box>
         </GestureContextProvider>

@@ -6,6 +6,7 @@ export const GesturesInspector = (): JSX.Element => {
 
   return (
     <Container>
+      <h1>Available gestures:</h1>
       {gestureController.availableGestures?.map((gesture) => (
         <div key={gesture.name}>
           {gestureController.currentGestureName === gesture.name ? 'IS CURRENT => ' : ''}
