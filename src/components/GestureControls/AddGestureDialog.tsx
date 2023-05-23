@@ -6,7 +6,6 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, CircularProg
 import DoneIcon from '@mui/icons-material/Done';
 import { PoseDataGrid } from './PoseDataGrid';
 import { useGestures } from './GestureContext';
-import { PoseData } from '../../model/PoseData';
 
 export const AddGestureDialog: React.FC = () => {
   const { detectedPose, availableGestures, setAvailableGestures } = useGestures();
@@ -28,8 +27,6 @@ export const AddGestureDialog: React.FC = () => {
   const handleAddGesture = () => {
     if (detectedPose && gestureName) {
       const newGesture = createGesture(gestureName, detectedPose.poseData);
-      console.log(setAvailableGestures);
-      console.log([...availableGestures, newGesture]);
       setAvailableGestures!([...availableGestures, newGesture]);
       handleClose();
     }
@@ -75,7 +72,7 @@ export const AddGestureDialog: React.FC = () => {
   );
 };
 
-function createGesture(name: string, poseData: PoseData[]) {
+function createGesture(name: string, poseData: any[]) {
   const newGesture = new fp.GestureDescription(name);
   console.log(poseData);
   for (const fingepose of poseData) {
@@ -85,8 +82,8 @@ function createGesture(name: string, poseData: PoseData[]) {
     const directionType = getDirectionType(fingepose[2]);
 
     if (fingerType && curlType && directionType) {
-      newGesture.addCurl(fingerType, curlType, 1.0);
-      newGesture.addDirection(fingerType, directionType, 1.0);
+      newGesture.addCurl(fingerType, curlType, 0.9);
+      newGesture.addDirection(fingerType, directionType, 0.9);
     }
   }
 

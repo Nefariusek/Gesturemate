@@ -21,6 +21,9 @@ export function useHandDetection() {
     setModel(await hp.load());
   };
 
+  const ref = React.useRef({ gestureController }).current;
+  ref.gestureController = gestureController;
+
   const detectHandpose = async (model: hp.HandPose) => {
     const video = webcamRef.current?.video;
     if (video && video.readyState === 4) {
@@ -37,9 +40,8 @@ export function useHandDetection() {
       const hand = await model.estimateHands(video);
 
       if (hand.length > 0 && !isGestureCaptured) {
-        const estimator = getGestureEstimator(gestureController.availableGestures);
+        const estimator = getGestureEstimator(ref.gestureController.availableGestures);
         const gesture = await estimator.estimate(hand[0].landmarks, 8);
-
         gestureController.setCurrentGestureName!(gesture.gestures[0]?.name);
 
         setPoseHistory((oldPoseHistory) => {
@@ -81,6 +83,8 @@ export function useHandDetection() {
       }
     }
   }, [poseHistory, isGestureCaptured]);
+
+  React.useEffect(() => {}, [gestureController.availableGestures]);
 
   return { webcamRef, canvasRef, model, startDetection, stopDetection, isRunning: !!handDetectionInterval };
 }
