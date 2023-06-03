@@ -8,16 +8,14 @@ interface IGestureContext {
   availableGestures: any[];
   currentGestureName: any;
   detectedPose: any;
+  isNewGestureDetectionStarted: boolean;
+  setIsNewGestureDetectionStarted: React.Dispatch<any>;
   setDetectedPose?: React.Dispatch<any>;
   setCurrentGestureName?: React.Dispatch<any>;
   setAvailableGestures?: React.Dispatch<any[]>;
 }
 
-const GestureContext = React.createContext<IGestureContext>({
-  availableGestures: [],
-  currentGestureName: null,
-  detectedPose: null,
-});
+const GestureContext = React.createContext<IGestureContext | undefined>(undefined);
 
 export const useGestures = () => {
   const context = React.useContext(GestureContext);
@@ -31,17 +29,26 @@ export const useGestures = () => {
 
 export const GestureContextProvider = ({ children }: GestureContextProviderProps) => {
   const [availableGestures, setAvailableGestures] = React.useState<any[]>([
-    fp.Gestures.VictoryGesture,
-    fp.Gestures.ThumbsUpGesture,
+    { command: 'calc', pose: fp.Gestures.VictoryGesture },
+    // { command: '', pose: fp.Gestures.ThumbsUpGesture },
   ]);
   const [currentGestureName, setCurrentGestureName] = React.useState<any>(null);
   const [detectedPose, setDetectedPose] = React.useState<any>(null);
+  const [isNewGestureDetectionStarted, setIsNewGestureDetectionStarted] = React.useState<boolean>(false);
+  const [isCooldownActive, setIsCooldownActive] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    if (currentGestureName === 'victory') {
-      sendCalculatorRequest();
+    const currentGestureInfo = availableGestures.find((g) => g.pose.name === currentGestureName);
+
+    if (!!currentGestureInfo && currentGestureInfo.command && !isCooldownActive) {
+      setIsCooldownActive(true);
+      sendRequest(currentGestureInfo.command);
+      setTimeout(() => setIsCooldownActive(false), 10000); //
     }
-  }, [currentGestureName]);
+    if (isCooldownActive) {
+      console.log('Cooling down!');
+    }
+  }, [currentGestureName, isCooldownActive]);
 
   const gesturesWithMemo = React.useMemo(
     () => ({
@@ -51,8 +58,19 @@ export const GestureContextProvider = ({ children }: GestureContextProviderProps
       setCurrentGestureName,
       availableGestures,
       setAvailableGestures,
+      isNewGestureDetectionStarted,
+      setIsNewGestureDetectionStarted,
     }),
-    [detectedPose, setDetectedPose, availableGestures, setAvailableGestures, currentGestureName, setCurrentGestureName],
+    [
+      detectedPose,
+      setDetectedPose,
+      availableGestures,
+      setAvailableGestures,
+      currentGestureName,
+      setCurrentGestureName,
+      isNewGestureDetectionStarted,
+      setIsNewGestureDetectionStarted,
+    ],
   );
 
   React.useEffect(() => {
@@ -70,20 +88,19 @@ export function getGestureDescription(name: string) {
   return new fp.GestureDescription(name);
 }
 
-async function sendCalculatorRequest() {
+async function sendRequest(command: string) {
   const response = await fetch('http://127.0.0.1:8002/', {
     method: 'POST',
     headers: {
       'Content-Type': 'raw',
     },
     mode: 'no-cors',
-    body: 'calc',
+    body: command,
   });
   if (response.ok) {
     const responseData = await response.json();
     console.log(responseData);
   } else {
-    console.log(response);
     console.error(`Failed to add gesture: ${response.status}`);
   }
 }

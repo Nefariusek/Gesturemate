@@ -15,7 +15,6 @@ export function useHandDetection() {
   const [model, setModel] = React.useState<hp.HandPose | undefined>();
   const [handDetectionInterval, setHandDetectionInterval] = React.useState<NodeJS.Timer>();
   const [poseHistory, setPoseHistory] = React.useState<any[]>([]);
-  const [isGestureCaptured, setIsGestureCaptured] = React.useState(false);
 
   const loadModel = async () => {
     setModel(await hp.load());
@@ -39,17 +38,19 @@ export function useHandDetection() {
 
       const hand = await model.estimateHands(video);
 
-      if (hand.length > 0 && !isGestureCaptured) {
-        const estimator = getGestureEstimator(ref.gestureController.availableGestures);
+      if (hand.length > 0) {
+        const estimator = getGestureEstimator(ref.gestureController.availableGestures.map((gesture) => gesture.pose));
         const gesture = await estimator.estimate(hand[0].landmarks, 8);
         gestureController.setCurrentGestureName!(gesture.gestures[0]?.name);
 
-        setPoseHistory((oldPoseHistory) => {
-          if (oldPoseHistory.length > 20) {
-            oldPoseHistory.shift();
-          }
-          return [...oldPoseHistory, gesture];
-        });
+        if (ref.gestureController.isNewGestureDetectionStarted) {
+          setPoseHistory((oldPoseHistory) => {
+            if (oldPoseHistory.length > 20) {
+              oldPoseHistory.shift();
+            }
+            return [...oldPoseHistory, gesture];
+          });
+        }
       }
 
       const ctx = canvasRef.current?.getContext('2d');
@@ -75,14 +76,14 @@ export function useHandDetection() {
   }, []);
 
   React.useEffect(() => {
-    if (!isGestureCaptured) {
+    if (gestureController.isNewGestureDetectionStarted === true && !gestureController.detectedPose) {
       const mostCommonPose = calculateMostCommonPose(poseHistory);
-      if (mostCommonPose) {
-        setIsGestureCaptured(true);
-        gestureController.setDetectedPose!(mostCommonPose);
+      console.log(mostCommonPose);
+      if (mostCommonPose && gestureController.setDetectedPose) {
+        gestureController.setDetectedPose(mostCommonPose);
       }
     }
-  }, [poseHistory, isGestureCaptured]);
+  }, [poseHistory]);
 
   React.useEffect(() => {}, [gestureController.availableGestures]);
 

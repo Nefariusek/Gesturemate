@@ -8,15 +8,21 @@ import { PoseDataGrid } from './PoseDataGrid';
 import { useGestures } from './GestureContext';
 
 export const AddGestureDialog: React.FC = () => {
-  const { detectedPose, availableGestures, setAvailableGestures } = useGestures();
+  const { detectedPose, availableGestures, setAvailableGestures, setDetectedPose, setIsNewGestureDetectionStarted } =
+    useGestures();
   const [open, setOpen] = React.useState(false);
   const [gestureName, setGestureName] = React.useState('');
+  const [command, setCommand] = React.useState('');
 
   const handleOpen = () => {
+    setIsNewGestureDetectionStarted(true);
     setOpen(true);
   };
 
   const handleClose = () => {
+    setIsNewGestureDetectionStarted(false);
+    setCommand('');
+    setGestureName('');
     setOpen(false);
   };
 
@@ -26,9 +32,16 @@ export const AddGestureDialog: React.FC = () => {
 
   const handleAddGesture = () => {
     if (detectedPose && gestureName) {
-      const newGesture = createGesture(gestureName, detectedPose.poseData);
+      const newGesture = createGesture(gestureName, command, detectedPose.poseData);
       setAvailableGestures!([...availableGestures, newGesture]);
       handleClose();
+    }
+  };
+
+  const handleResetButtonClick = () => {
+    if (setDetectedPose) {
+      setDetectedPose(null);
+      setIsNewGestureDetectionStarted(true);
     }
   };
 
@@ -50,6 +63,16 @@ export const AddGestureDialog: React.FC = () => {
             value={gestureName}
             onChange={handleGestureNameChange}
           />
+
+          <TextField
+            margin="dense"
+            id="command-to-execute"
+            label="Command to execute"
+            type="text"
+            fullWidth
+            value={command}
+            onChange={(event) => setCommand(event.target.value)}
+          />
           {!detectedPose ? (
             <div>
               <CircularProgress />
@@ -65,6 +88,9 @@ export const AddGestureDialog: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
+          <Button variant="contained" color="primary" onClick={handleResetButtonClick}>
+            Reset
+          </Button>
           <Button onClick={handleAddGesture}>Add</Button>
         </DialogActions>
       </Dialog>
@@ -72,7 +98,7 @@ export const AddGestureDialog: React.FC = () => {
   );
 };
 
-function createGesture(name: string, poseData: any[]) {
+function createGesture(name: string, command: string, poseData: any[]) {
   const newGesture = new fp.GestureDescription(name);
   console.log(poseData);
   for (const fingepose of poseData) {
@@ -82,12 +108,12 @@ function createGesture(name: string, poseData: any[]) {
     const directionType = getDirectionType(fingepose[2]);
 
     if (fingerType && curlType && directionType) {
-      newGesture.addCurl(fingerType, curlType, 0.9);
-      newGesture.addDirection(fingerType, directionType, 0.9);
+      newGesture.addCurl(fingerType, curlType, 1.0);
+      newGesture.addDirection(fingerType, directionType, 1.0);
     }
   }
 
-  return newGesture;
+  return { command: command, pose: newGesture };
 }
 
 function getFingerType(finger: string) {

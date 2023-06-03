@@ -37,7 +37,6 @@ export const App = (): JSX.Element => {
         <GestureContextProvider>
           <Box
             sx={{
-              width: '100%',
               height: '100%',
               alignItems: 'center',
               justifyContent: 'center',
@@ -49,13 +48,10 @@ export const App = (): JSX.Element => {
           >
             <div style={{ display: 'flex' }}>
               <ColorModeToggle />
+              <AddGestureDialog />
               <GesturesInspector />
             </div>
             <WebcamHandler />
-            <div>
-              {/* <GestureAdder /> */}
-              <AddGestureDialog />
-            </div>
           </Box>
         </GestureContextProvider>
       </ThemeProvider>
